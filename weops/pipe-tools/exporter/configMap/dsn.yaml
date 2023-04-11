@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: oracle_dsn
+  name: oracle-dsn
   namespace: oracle
 data:
-  DATA_SOURCE_NAME_12c: "system/Weops123!@//db12c-oracle-db:1521/ORCLCDB.localdomain"
-  DATA_SOURCE_NAME_19c: "system/Weops123!@//db19c-oracle-db:1521/ORCLCDB"
-  DATA_SOURCE_NAME_21c: "system/Weops123!@//db21c-oracle-db:1521/ORCLCDB"
+  DATA_SOURCE_NAME_12c: "oracle://system:Weops123!@db12c-oracle-db.oracle:1521/ORCLCDB.localdomain"
+  DATA_SOURCE_NAME_19c: "oracle://system:Weops123!@db19c-oracle-db.oracle:1521/ORCLCDB"
+  DATA_SOURCE_NAME_21c: "oracle://system:Weops123!@db21c-oracle-db.oracle:1521/ORCLCDB"

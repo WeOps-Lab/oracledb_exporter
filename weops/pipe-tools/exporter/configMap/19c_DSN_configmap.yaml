@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: oracle_19c_DSN
-  namespace: oracle
-data:
-  DATA_SOURCE_NAME: "system/Weops123!@//db19c-oracle-db:1521/ORCLCDB"

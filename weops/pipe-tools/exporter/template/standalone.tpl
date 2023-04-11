@@ -62,7 +62,7 @@ spec:
         - name: DATA_SOURCE_NAME
           valueFrom:
             configMapKeyRef:
-              name: oracle_dsn
+              name: oracle-dsn
               key: DATA_SOURCE_NAME_{{VERSION}}
         securityContext:
           allowPrivilegeEscalation: false
