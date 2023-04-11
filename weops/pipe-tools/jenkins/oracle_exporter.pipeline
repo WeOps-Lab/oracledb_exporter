@@ -16,7 +16,7 @@ pipeline {
     stages {
         stage('拉取代码') {
             steps {
-                git url: 'https://proxy.zyun.vip/https://github.com/WeOps-Lab/oracledb_exporter', branch: "weops/${env.BranchName}"
+                git url: 'https://github.com/WeOps-Lab/oracledb_exporter', branch: "weops/${env.BranchName}"
             }
         }
 
@@ -31,10 +31,9 @@ pipeline {
                     parallel buildOptions.collectEntries { arch, options ->
                         [(arch): {
                             if (arch == "linux_amd64" || arch == "windows_amd64") {
-                                sh "go build GOPROXY=https://goproxy.cn ${options} -ldflags "-X main.Version=${env.BranchName} -s -w" PREFIX=${env.BuildPath}"
+                                sh "GOPROXY=https://goproxy.cn ${options} go build  -ldflags '-X main.Version=${env.BranchName} -s -w' -o ${env.BuildPath} ."
                             } else if (arch == "linux_arm64") {
-                                sh "go build GOPROXY=https://goproxy.cn ${options} -ldflags "-X main.Version=${env.BranchName} -s -w" PREFIX=${env.BuildPath}/${arch}"
-                                sh "cp ${env.BuildPath}/${arch}/oracledb_exporter ${env.BuildPath}/postgres_exporter_arm64"
+                                sh "GOPROXY=https://goproxy.cn ${options} go build -ldflags '-X main.Version=${env.BranchName} -s -w' -o ${env.BuildPath}/oracledb_exporter_arm64"
                             }
                         }]
                     }
