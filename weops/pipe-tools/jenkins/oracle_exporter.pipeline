@@ -58,7 +58,7 @@ pipeline {
 
                 withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'chaos', namespace: '', serverUrl: 'https://10.10.90.113:6443') {
                     script {
-                        def components = ["postgres"]
+                        def components = ["oracle"]
                         components.each { component ->
                             dir("weops/pipe-tools/exporter") {
                                 sh "kubectl delete -f ./configMap -n ${component} --ignore-not-found"
