@@ -7,10 +7,10 @@ require (
 	github.com/alecthomas/kingpin/v2 v2.3.2
 	github.com/go-kit/kit v0.12.0
 	github.com/go-kit/log v0.2.1
-	github.com/mattn/go-oci8 v0.1.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common v0.42.0
 	github.com/prometheus/exporter-toolkit v0.9.1
+	github.com/sijms/go-ora/v2 v2.6.15
 )
 
 require (
