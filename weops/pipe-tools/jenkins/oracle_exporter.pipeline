@@ -31,9 +31,9 @@ pipeline {
                     parallel buildOptions.collectEntries { arch, options ->
                         [(arch): {
                             if (arch == "linux_amd64" || arch == "windows_amd64") {
-                                sh "GOPROXY=https://goproxy.cn ${options} go build  -ldflags '-X main.Version=${env.BranchName} -s -w' -o ${env.BuildPath} ."
+                                sh "CGO_ENABLED=0 GOPROXY=https://goproxy.cn ${options} go build  -ldflags '-X main.Version=${env.BranchName} -s -w' -o ${env.BuildPath} ."
                             } else if (arch == "linux_arm64") {
-                                sh "GOPROXY=https://goproxy.cn ${options} go build -ldflags '-X main.Version=${env.BranchName} -s -w' -o ${env.BuildPath}/oracledb_exporter_arm64"
+                                sh "CGO_ENABLED=0 GOPROXY=https://goproxy.cn ${options} go build -ldflags '-X main.Version=${env.BranchName} -s -w' -o ${env.BuildPath}/oracledb_exporter_arm64"
                             }
                         }]
                     }
