@@ -1,0 +1,81 @@
+pipeline {
+    agent {
+        node('chaos')
+    }
+
+    parameters {
+       string(name: 'BranchName', defaultValue: 'dev', description: null)
+       string(name: 'GitTag', defaultValue: 'dev', description: null)
+       string(name: 'BuildPath', defaultValue: 'weops/pipe-tools/bin', description: 'The path to build binaries')
+    }
+
+    environment {
+       PATH = "/data/go/bin:${env.PATH}"
+    }
+
+    stages {
+        stage('拉取代码') {
+            steps {
+                git url: 'https://proxy.zyun.vip/https://github.com/WeOps-Lab/oracledb_exporter', branch: "weops/${env.BranchName}"
+            }
+        }
+
+        stage('编译探针'){
+            steps {
+                script {
+                    def buildOptions = [
+                        "linux_amd64": "GOOS=linux GOARCH=amd64",
+                        "windows_amd64": "GOOS=windows GOARCH=amd64",
+                        "linux_arm64": "GOOS=linux GOARCH=arm64"
+                    ]
+                    parallel buildOptions.collectEntries { arch, options ->
+                        [(arch): {
+                            if (arch == "linux_amd64" || arch == "windows_amd64") {
+                                sh "go build GOPROXY=https://goproxy.cn ${options} -ldflags "-X main.Version=${env.BranchName} -s -w" PREFIX=${env.BuildPath}"
+                            } else if (arch == "linux_arm64") {
+                                sh "go build GOPROXY=https://goproxy.cn ${options} -ldflags "-X main.Version=${env.BranchName} -s -w" PREFIX=${env.BuildPath}/${arch}"
+                                sh "cp ${env.BuildPath}/${arch}/oracledb_exporter ${env.BuildPath}/postgres_exporter_arm64"
+                            }
+                        }]
+                    }
+                }
+            }
+        }
+
+        stage('构建镜像和推送镜像') {
+            steps {
+                dir("${env.BuildPath}") {
+                    sh 'docker build --no-cache  -f ../docker/Dockerfile -t registry-svc:25000/library/oracledb-exporter:latest .'
+                    sh 'docker push registry-svc:25000/library/oracledb-exporter:latest'
+                }
+            }
+        }
+
+        stage('生成部署文件并部署探针和混沌工程') {
+            steps {
+                dir("weops/pipe-tools/exporter/template") {
+                    sh 'bash build.sh'
+                }
+
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'chaos', namespace: '', serverUrl: 'https://10.10.90.113:6443') {
+                    script {
+                        def components = ["postgres"]
+                        components.each { component ->
+                            dir("weops/pipe-tools/exporter") {
+                                sh "kubectl delete -f ./configMap -n ${component} --ignore-not-found"
+                                sh "kubectl apply -f ./configMap -n ${component}"
+
+                                sh "kubectl delete -f ./standalone -n ${component} --ignore-not-found"
+                                sh "kubectl apply -f ./standalone -n ${component}"
+                            }
+                        }
+                    }
+
+                    dir('weops/pipe-tools/chaos') {
+                        sh 'kubectl apply -f ./ '
+                    }
+                }
+            }
+        }
+    }
+}
