@@ -21,8 +21,8 @@ spec:
     stressors:
       memory:
         workers: 2
-        size: 40%
+        size: 20%
       cpu:
         workers: 2
-        load: 40
+        load: 20
     duration: 20s
