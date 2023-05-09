@@ -46,7 +46,7 @@ fieldtoappend= "wait_class"
 request = '''
 SELECT
   n.wait_class as WAIT_CLASS,
-  round(m.time_waited/m.INTSIZE_CSEC,3) as VALUE
+  round(m.time_waited*10/(m.INTSIZE_CSEC),3) as VALUE
 FROM
   v$waitclassmetric  m, v$system_wait_class n
 WHERE
