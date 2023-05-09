@@ -17,8 +17,8 @@ request = "SELECT instance_number AS inst_id, host_name AS node_name, instance_n
 
 [[metric]]
 context = "rac"
-metricsdesc = { node_count = "Number of nodes in the RAC cluster." }
-request = "select count(*) as node_count from gv$instance where database_type='RAC'"
+metricsdesc = { node = "Number of nodes in the RAC cluster." }
+request = "select count(*) as node from gv$instance where database_type='RAC'"
 
 [[metric]]
 context = "sessions"
