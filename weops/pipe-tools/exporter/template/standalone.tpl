@@ -58,6 +58,8 @@ spec:
       - name: oracledb-exporter-standalone-{{VERSION}}
         image: registry-svc:25000/library/oracledb-exporter:latest
         imagePullPolicy: Always
+        args:
+        - --custom.metrics=/custom-metrics.toml
         env:
         - name: DATA_SOURCE_NAME
           valueFrom:

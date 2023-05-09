@@ -10,6 +10,17 @@ import (
 // needs the const if imported, cannot os.ReadFile in this case
 const defaultMetricsConst = `
 [[metric]]
+context = "uptime"
+labels = [ "inst_id", "node_name", "instance_name"]
+metricsdesc = { seconds = "instance uptime" }
+request = "SELECT instance_number AS inst_id, host_name AS node_name, instance_name, (SYSDATE - startup_time) * 86400 AS seconds FROM v$instance"
+
+[[metric]]
+context = "rac"
+metricsdesc = { node_count = "Number of nodes in the RAC cluster." }
+request = "select count(*) as node_count from gv$instance where database_type='RAC'"
+
+[[metric]]
 context = "sessions"
 labels = [ "status", "type" ]
 metricsdesc = { value= "Gauge metric with count of sessions by status and type." }
@@ -24,8 +35,8 @@ request="SELECT resource_name,current_utilization,CASE WHEN TRIM(limit_value) LI
 [[metric]]
 context = "asm_diskgroup"
 labels = [ "name" ]
-metricsdesc = { total = "Total size of ASM disk group.", free = "Free space available on ASM disk group." }
-request = "SELECT name,total_mb*1024*1024 as total,free_mb*1024*1024 as free FROM v$asm_diskgroup_stat where exists (select 1 from v$datafile where name like '+%')"
+metricsdesc = { total = "Total size of ASM disk group.", free = "Free space available on ASM disk group.", usage = "Percentage of ASM disk group used."}
+request = "SELECT name,total_mb*1024*1024 as total,free_mb*1024*1024 as free, (1 - free_mb / total_mb) * 100 as usage FROM v$asm_diskgroup_stat where exists (select 1 from v$datafile where name like '+%')"
 ignorezeroresult = true
 
 [[metric]]
