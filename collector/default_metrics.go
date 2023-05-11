@@ -18,11 +18,6 @@ metricsdesc = { seconds = "instance uptime" }
 request = "SELECT instance_number AS inst_id, host_name AS node_name, instance_name, (SYSDATE - startup_time) * 86400 AS seconds FROM v$instance"
 
 [[metric]]
-context = "rac"
-metricsdesc = { node = "Number of nodes in the RAC cluster." }
-request = "select count(*) as node from gv$instance where database_type='RAC'"
-
-[[metric]]
 context = "sessions"
 labels = [ "status", "type" ]
 metricsdesc = { value= "Gauge metric with count of sessions by status and type." }

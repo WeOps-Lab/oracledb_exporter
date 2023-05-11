@@ -1,4 +1,9 @@
 [[metric]]
+context = "rac"
+metricsdesc = { node = "Number of nodes in the RAC cluster." }
+request = "select count(*) as node from gv$instance where database_type='RAC'"
+
+[[metric]]
 context = "asm_disk_stat"
 labels = [ "inst_id", "node_name", "instance_name", "diskgroup_name", "disk_number", "failgroup", "path" ]
 metricsdesc = { reads = "Total number of I/O read requests for the DG.", writes = "Total number of I/O write requests for the DG.", read_time = "Total I/O time (in hundreths of a second) for read requests for the disk", write_time = "Total I/O time (in hundreths of a second) for write requests for the disk", bytes_read = "Total number of bytes read from the DG", bytes_written = "Total number of bytes written from the DG", iops = "Total number of I/O requests for the DG" }
