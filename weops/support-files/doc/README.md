@@ -24,16 +24,20 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 
 ### 参数说明
 
-| **参数名**              | **含义**                                                                                                            | **是否必填** | **使用举例**                                       |
-|----------------------|-------------------------------------------------------------------------------------------------------------------|----------|------------------------------------------------|
-| DATA_SOURCE_NAME     | DSN参数，Oracle数据库的数据源环境变量，包括数据库地址、端口、数据库名、用户和密码等信息。oracle://user:password@hostIp:port/service_names **注意！该参数为环境变量** | 是        | oracle://weops:Weops123@127.0.0.1:1521/ORCLCDB |
-| --custom.metrics     | 自定义指标查询文件路径   **注意！该参数在平台层面为文件参数，进程中该参数值为采集配置文件路径(上传文件即可，平台会补充文件路径)！**                                            |          |                                                |
-| --query.timeout      | 查询超时秒数，默认使用5s                                                                                                     | 否        | 5                                              |
-| --log.level          | 日志级别                                                                                                              | 否        | info                                           |
-| --web.listen-address | exporter监听id及端口地址                                                                                                 | 否        | 127.0.0.1:9601                                 |
+| **参数名**              | **含义**                                                                                                                                 | **是否必填** | **使用举例**                                       |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------|----------|------------------------------------------------|
+| DATA_SOURCE_NAME     | DSN参数，在连接Oracle数据库时，需要提供一个连接字符串，其中包括Oracle数据库实例的主机名、端口号和服务名称，例如： oracle://username:password@hostname:port/service_name **注意！该参数为环境变量** | 是        | oracle://weops:Weops123@127.0.0.1:1521/ORCLCDB |
+| --custom.metrics     | 自定义指标查询文件路径   **注意！该参数在平台层面为文件参数，进程中该参数值为采集配置文件路径(上传文件即可，平台会补充文件路径)！**                                                                 |          |                                                |
+| --query.timeout      | 查询超时秒数，默认使用5s                                                                                                                          | 否        | 5                                              |
+| --log.level          | 日志级别                                                                                                                                   | 否        | info                                           |
+| --web.listen-address | exporter监听id及端口地址                                                                                                                      | 否        | 127.0.0.1:9601                                 |
 
-**注意**
-1. 对于oracle数据库12版本，DSN中数据库名后必须加入域名，例: "oracle://system:Weops123!@db12c-oracle-db.oracle:1521/ORCLCDB.localdomain"
+
+### 使用指引
+1. 查看Oracle数据库服务名和域名  
+   注意！**对于oracle数据库12版本，DSN中数据库名后必须加入域名，其他版本一般不需要**  
+   ORCLCDB是Oracle数据库的一个服务名称（Service Name），它用于唯一标识数据库实例中的一个服务。  
+   例: "oracle://system:Weops123!@db12c-oracle-db.oracle:1521/ORCLCDB.localdomain"  
    - 查看当前数据库实例的 `SERVICE_NAME` 参数的值。
       ```sql
      SELECT value FROM v$parameter WHERE name = 'service_names'; 
@@ -49,19 +53,88 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
    - 确认监听器配置文件（`lsnrctl status`会输出监听器配置状态等信息，寻找配置文件，通常是 listener.ora）中是否正确定义了服务名称，并与您尝试连接的服务名称匹配。
    - `lsnrctl` 在oracle数据库12版本中，此命令一般存放于 `/u01/app/oracle/product/12.2.0/dbhome_1/` ； 在oracle数据库19版本中，一般存放于 `/opt/oracle/product/19c/dbhome_1/bin`
 
+3. 连接Oracle数据库  
+   使用操作系统的身份认证（通常是超级用户或管理员），直接以 sysdba 角色登录到数据库
+    ```shell
+    sqlplus / as sysdba
+    ```  
+      
+    使用指定账户登录
+    ```shell
+    sqlplus username/password@host:port/service_name
+    ```  
 
-#### 自定义指标查询文件
-1. 使用自定义指标查询 (通过命令行参数 `--custom.metrics` 设置)
-2. 文件内容规范
-    - 每一类自定义查询指标必须含有`[[metric]]`开头
-    - 对于每个指标部分，需要提供上下文（context）、请求（request）和请求字段与注释之间的映射。
-    - `context` 指标前缀
-    - `labels` 指标维度数据信息，[维度1], [维度2], [维度3]...
-    - `metricsdesc`  [指标后缀] = [指标的描述信息]
-    - `metricstype` [指标后缀] = [指标类型]
-    - `request` sql查询语句，注意sql中字段与 `labels` 和 `metricsdesc` 的映射
+4. 创建账户及授权  
+    注意！创建账户时必须使用管理员账户
+    ```sql
+    # 新建用户
+    CREATE USER [user] IDENTIFIED BY [password];
 
-3. 下方是默认的自定义指标文件配置内容  
+    # 修改用户的密码，密码若含特殊字符需使用双引号将密码括起来
+    ALTER USER [user] IDENTIFIED BY [password];
+
+    # 允许用户建立数据库会话
+    GRANT CREATE SESSION TO [user];
+
+    # uptime指标授权
+    GRANT SELECT ON V_$instance to [user];
+
+    # rac指标授权
+    GRANT SELECT ON GV_$instance to [user];
+
+    # sessions类指标授权
+    GRANT SELECT ON V_$session to [user];
+
+    # resource类指标授权
+    GRANT SELECT ON V_$resource_limit to [user];
+
+    # asm_diskgroup类指标授权
+    GRANT SELECT ON V_$datafile to [user];
+    GRANT SELECT ON V_$asm_diskgroup_stat to [user];
+
+    # activity类指标授权
+    GRANT SELECT ON V_$sysstat to [user];
+
+    # process类指标授权
+    GRANT SELECT ON V_$process to [user];
+
+    # wait_time类指标授权
+    GRANT SELECT ON V_$waitclassmetric to [user];
+    GRANT SELECT ON V_$system_wait_class to [user];
+
+    # tablespace类指标授权
+    GRANT SELECT ON dba_tablespace_usage_metrics to [user];
+    GRANT SELECT ON dba_tablespaces to [user];
+
+    # asm_disk_stat类指标授权
+    GRANT SELECT ON V_$asm_disk_stat to [user];
+    GRANT SELECT ON V_$asm_diskgroup_stat to [user];
+    GRANT SELECT ON V_$instance to [user];
+
+    # asm_space_consumers类指标授权
+    GRANT SELECT ON V_$asm_alias to [user];
+    GRANT SELECT ON V_$asm_diskgroup to [user];
+    GRANT SELECT ON V_$asm_file to [user];
+   
+    # sga类指标授权
+    GRANT SELECT ON V_$sga TO weops;
+    GRANT SELECT ON V_$sgastat TO weops;
+    
+    # pga类指标授权
+    GRANT SELECT ON V_$pgastat TO weops;
+    ```
+
+5. 自定义指标查询文件
+   - 文件内容规范
+     - 每一类自定义查询指标必须含有`[[metric]]`开头
+     - 对于每个指标部分，需要提供上下文（context）、请求（request）和请求字段与注释之间的映射。
+     - `context` 指标前缀
+     - `labels` 指标维度数据信息，[维度1], [维度2], [维度3]...
+     - `metricsdesc`  [指标后缀] = [指标的描述信息]
+     - `metricstype` [指标后缀] = [指标类型]
+     - `request` sql查询语句，注意sql中字段与 `labels` 和 `metricsdesc` 的映射  
+
+   - 使用自定义指标查询 (通过命令行参数 `--custom.metrics` 设置)，下方是默认的自定义指标文件配置内容
     ```toml
     [[metric]]
     context = "rac"
@@ -159,72 +232,6 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
     '''
     ```
 
-### 使用指引
-
-1. 连接Oracle数据库  
-   使用操作系统的身份认证（通常是超级用户或管理员），直接以 sysdba 角色登录到数据库
-    ```shell
-    sqlplus / as sysdba
-    ```  
-      
-    使用指定账户登录
-    ```shell
-    sqlplus username/password@host:port/service_name
-    ```  
-
-2. 创建账户及授权  
-    注意！创建账户时必须使用管理员账户
-    ```sql
-    # 新建用户
-    CREATE USER [user] IDENTIFIED BY [password];
-
-    # 修改用户的密码，密码若含特殊字符需使用双引号将密码括起来
-    ALTER USER [user] IDENTIFIED BY [password];
-
-    # 允许用户建立数据库会话
-    GRANT CREATE SESSION TO [user];
-
-    # uptime指标授权
-    GRANT SELECT ON V_$instance to [user];
-
-    # rac指标授权
-    GRANT SELECT ON GV_$instance to [user];
-
-    # sessions类指标授权
-    GRANT SELECT ON V_$session to [user];
-
-    # resource类指标授权
-    GRANT SELECT ON V_$resource_limit to [user];
-
-    # asm_diskgroup类指标授权
-    GRANT SELECT ON V_$datafile to [user];
-    GRANT SELECT ON V_$asm_diskgroup_stat to [user];
-
-    # activity类指标授权
-    GRANT SELECT ON V_$sysstat to [user];
-
-    # process类指标授权
-    GRANT SELECT ON V_$process to [user];
-
-    # wait_time类指标授权
-    GRANT SELECT ON V_$waitclassmetric to [user];
-    GRANT SELECT ON V_$system_wait_class to [user];
-
-    # tablespace类指标授权
-    GRANT SELECT ON dba_tablespace_usage_metrics to [user];
-    GRANT SELECT ON dba_tablespaces to [user];
-
-    # asm_disk_stat类指标授权
-    GRANT SELECT ON V_$asm_disk_stat to [user];
-    GRANT SELECT ON V_$asm_diskgroup_stat to [user];
-    GRANT SELECT ON V_$instance to [user];
-
-    # asm_space_consumers类指标授权
-    GRANT SELECT ON V_$asm_alias to [user];
-    GRANT SELECT ON V_$asm_diskgroup to [user];
-    GRANT SELECT ON V_$asm_file to [user];
-    ```
-
 
 ### 指标简介
 | **指标ID**                                       | **指标中文名**             | **维度ID**                                                                        | **维度含义**                                   | **单位**  |
@@ -248,6 +255,12 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 | oracledb_resource_limit_value                  | Oracle数据库资源限定值        | resource_name                                                                   | 资源类型                                       | -       |
 | oracledb_process_count                         | Oracle数据库进程数          | -                                                                               | -                                          | -       |
 | oracledb_sessions_value                        | Oracle数据库会话数          | status, type                                                                    | 会话状态，会话类型                                  | -       |
+| oracledb_sga_total                             | Oracle数据库SGA总大小       | -                                                                               | -                                          | bytes   |
+| oracledb_sga_free                              | Oracle数据库SGA可用大小      | -                                                                               | -                                          | bytes   |
+| oracledb_sga_used_percent                      | Oracle数据库SGA使用率       | -                                                                               | -                                          | percent |
+| oracledb_pga_total                             | Oracle数据库PGA总大小       | -                                                                               | -                                          | bytes   |
+| oracledb_pga_used                              | Oracle数据库PGA已使用大小     | -                                                                               | -                                          | bytes   |
+| oracledb_pga_used_percent                      | Oracle数据库PGA使用率       | -                                                                               | -                                          | percent |
 | oracledb_tablespace_bytes                      | Oracle数据库表已使用容量大小     | tablespace, type                                                                | 表空间名称，表空间类型                                | bytes   |
 | oracledb_tablespace_max_bytes                  | Oracle数据库表最大容量限制      | tablespace, type                                                                | 表空间名称，表空间类型                                | bytes   |
 | oracledb_tablespace_free                       | Oracle数据库表可用容量大小      | tablespace, type                                                                | 表空间名称，表空间类型                                | bytes   |
@@ -273,7 +286,6 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 | oracledb_exporter_last_scrape_duration_seconds | Oracle数据库监控探针最近一次抓取时长 | -                                                                               | -                                          | s       |
 | oracledb_exporter_last_scrape_error            | Oracle数据库监控探针最近一次抓取状态 | -                                                                               | -                                          | -       |
 | oracledb_exporter_scrapes_total                | Oracle数据库监控探针抓取指标总数   | -                                                                               | -                                          | -       |
-
 
 ### 版本日志
 
