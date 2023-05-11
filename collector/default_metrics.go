@@ -77,6 +77,30 @@ FROM  dba_tablespace_usage_metrics dtum, dba_tablespaces dt
 WHERE dtum.tablespace_name = dt.tablespace_name
 ORDER by tablespace
 '''
+
+[[metric]]
+context = "pga"
+metricsdesc = { total = "Generic counter metric of aggregate PGA target parameter in Oracle.", used = "Generic counter metric of total PGA allocated in Oracle.", used_percent = "Gauge metric showing as a percentage of how much of the PGA has been used." }
+request = '''
+SELECT
+    (SELECT value FROM v$pgastat WHERE name = 'aggregate PGA target parameter') AS total,
+    (SELECT value FROM v$pgastat WHERE name = 'total PGA allocated') AS used,
+    (SELECT value FROM v$pgastat WHERE name = 'total PGA allocated') / (SELECT value FROM v$pgastat WHERE name = 'aggregate PGA target parameter') * 100 AS used_percent
+FROM
+    dual
+'''
+
+[[metric]]
+context = "sga"
+metricsdesc = { total = "Generic counter metric of total SGA size in Oracle.", free = "Generic counter metric of free SGA memory in Oracle.", used_percent = "Gauge metric showing as a percentage of how much of the SGA has been used." }
+request = '''
+SELECT
+    (SELECT SUM(value) FROM v$sga) AS total,
+    (SELECT SUM(bytes) FROM v$sgastat WHERE name = 'free memory') AS free,
+    ((SELECT SUM(value) FROM v$sga) - (SELECT SUM(bytes) FROM v$sgastat WHERE name = 'free memory')) / (SELECT SUM(value) FROM v$sga) * 100 AS used_percent
+FROM
+    dual
+'''
 `
 
 // DefaultMetrics is a somewhat hacky way to load the default metrics
