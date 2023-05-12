@@ -31,9 +31,9 @@ request="SELECT resource_name,current_utilization,CASE WHEN TRIM(limit_value) LI
 
 [[metric]]
 context = "asm_diskgroup"
-labels = [ "name" ]
+labels = [ "diskgroup_name" ]
 metricsdesc = { total = "Total size of ASM disk group.", free = "Free space available on ASM disk group.", usage = "Percentage of ASM disk group used."}
-request = "SELECT name,total_mb*1024*1024 as total,free_mb*1024*1024 as free, (1 - free_mb / total_mb) * 100 as usage FROM v$asm_diskgroup_stat where exists (select 1 from v$datafile where name like '+%')"
+request = "SELECT name as diskgroup_name,total_mb*1024*1024 as total,free_mb*1024*1024 as free, (1 - free_mb / total_mb) * 100 as usage FROM v$asm_diskgroup_stat where exists (select 1 from v$datafile where name like '+%')"
 ignorezeroresult = true
 
 [[metric]]
