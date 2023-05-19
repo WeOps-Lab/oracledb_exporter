@@ -103,6 +103,32 @@ FROM
 '''
 `
 
+const DGMetricsConst = `
+[[metric]]
+context = "dataguard_apply"
+metricsdesc = { lag_delay = "Apply lag in seconds." }
+request = '''
+SELECT
+    to_number(substr(v.value, 2, 2)) * 24 * 60 * 60 + to_number(substr(v.value, 5, 2)) * 60 * 60 + to_number(substr(v.VALUE, 8, 2)) * 60 + to_number(substr(v.VALUE, 11, 2)) AS lag_delay
+FROM
+    v$dataguard_stats v
+WHERE
+    v.name = 'apply lag'
+'''
+
+[[metric]]
+context = "dataguard_transport"
+metricsdesc = { lag_delay = "Transport lag in seconds." }
+request = '''
+SELECT
+    to_number(substr(v.value, 2, 2)) * 24 * 60 * 60 + to_number(substr(v.value, 5, 2)) * 60 * 60 + to_number(substr(v.VALUE, 8, 2)) * 60 + to_number(substr(v.VALUE, 11, 2)) AS lag_delay
+FROM
+    v$dataguard_stats v
+WHERE
+    v.name = 'transport lag'
+'''
+`
+
 // DefaultMetrics is a somewhat hacky way to load the default metrics
 func (e *Exporter) DefaultMetrics() Metrics {
 	var metricsToScrape Metrics
@@ -117,5 +143,15 @@ func (e *Exporter) DefaultMetrics() Metrics {
 		level.Error(e.logger).Log(err)
 		panic(errors.New("Error while loading " + defaultMetricsConst))
 	}
+
+	var dgMetricsToScrape Metrics
+	if e.config.IsDG {
+		if _, err := toml.Decode(DGMetricsConst, &dgMetricsToScrape); err != nil {
+			level.Error(e.logger).Log(err)
+			panic(errors.New("Error while loading " + DGMetricsConst))
+		}
+		metricsToScrape.Metric = append(metricsToScrape.Metric, dgMetricsToScrape.Metric...)
+	}
+
 	return metricsToScrape
 }

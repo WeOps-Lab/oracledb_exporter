@@ -45,6 +45,7 @@ type Config struct {
 	CustomMetrics      string
 	QueryTimeout       int
 	DefaultMetricsFile string
+	IsDG               bool
 }
 
 // CreateDefaultConfig returns the default configuration of the Exporter

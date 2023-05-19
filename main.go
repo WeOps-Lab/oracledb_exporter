@@ -26,6 +26,7 @@ import (
 var (
 	// Version will be set at build time.
 	Version        = "0.0.0.dev"
+	isDG           = kingpin.Flag("isDataGuard", "Whether this is a DataGuard").Default("false").Bool()
 	metricPath     = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics. (env: TELEMETRY_PATH)").Default(getEnv("TELEMETRY_PATH", "/metrics")).String()
 	customMetrics  = kingpin.Flag("custom.metrics", "File that may contain various custom metrics in a TOML file. (env: CUSTOM_METRICS)").Default(getEnv("CUSTOM_METRICS", "")).String()
 	queryTimeout   = kingpin.Flag("query.timeout", "Query timeout (in seconds). (env: QUERY_TIMEOUT)").Default(getEnv("QUERY_TIMEOUT", "5")).Int()
@@ -50,6 +51,7 @@ func main() {
 		MaxIdleConns:  *maxIdleConns,
 		CustomMetrics: *customMetrics,
 		QueryTimeout:  *queryTimeout,
+		IsDG:          *isDG,
 	}
 	exporter, err := collector.NewExporter(logger, config)
 	if err != nil {
