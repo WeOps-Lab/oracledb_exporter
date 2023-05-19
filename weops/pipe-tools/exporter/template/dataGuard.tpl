@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
+  name: oracledb-exporter-dg-{{VERSION}}
   namespace: oracle
 spec:
-  serviceName: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
+  serviceName: oracledb-exporter-dg-{{VERSION}}
   replicas: 1
   selector:
     matchLabels:
-      app: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
+      app: oracledb-exporter-dg-{{VERSION}}
   template:
     metadata:
       annotations:
@@ -45,9 +45,9 @@ spec:
         telegraf.influxdata.com/limits-cpu: '300m'
         telegraf.influxdata.com/limits-memory: '300Mi'
       labels:
-        app: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
+        app: oracledb-exporter-dg-{{VERSION}}
         exporter_object: oracledb
-        object_mode: rac
+        object_mode: dg
         object_version: {{VERSION}}
         pod_type: exporter
     spec:
@@ -55,18 +55,17 @@ spec:
         node-role: worker
       shareProcessNamespace: true
       containers:
-      - name: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
+      - name: oracledb-exporter-dg-{{VERSION}}
         image: registry-svc:25000/library/oracledb-exporter:latest
         imagePullPolicy: Always
         args:
-        - --isRAC
-        - --isASM
+        - --isDataGuard
         env:
         - name: DATA_SOURCE_NAME
           valueFrom:
             configMapKeyRef:
               name: oracle-rac-dsn
-              key: DATA_SOURCE_NAME_{{VERSION}}_{{RAC}}
+              key: DATA_SOURCE_NAME_{{VERSION}}_dg
         securityContext:
           allowPrivilegeEscalation: false
           runAsUser: 0
@@ -85,8 +84,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
-  name: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
+    app: oracledb-exporter-dg-{{VERSION}}
+  name: oracledb-exporter-dg-{{VERSION}}
   namespace: oracle
   annotations:
     prometheus.io/scrape: "true"
@@ -98,4 +97,4 @@ spec:
     protocol: TCP
     targetPort: 9161
   selector:
-    app: oracledb-exporter-rac-{{VERSION}}-{{RAC}}
+    app: oracledb-exporter-dg-{{VERSION}}

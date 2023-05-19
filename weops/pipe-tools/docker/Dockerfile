@@ -5,7 +5,6 @@ FROM --platform=linux/amd64 golang:1.19-alpine as builder
 WORKDIR /
 
 COPY oracledb_exporter /oracledb_exporter
-ADD custom-metrics.toml /
 
 EXPOSE     9161
-ENTRYPOINT ["/oracledb_exporter", "--custom.metrics", "/custom-metrics.toml"]
+ENTRYPOINT ["/oracledb_exporter"]

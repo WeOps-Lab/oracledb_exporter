@@ -14,3 +14,9 @@ for version in 19c; do
     sed "s/{{VERSION}}/${version}/g; s/{{RAC}}/${rac}/g" rac.tpl > ../rac/${rac_output_file}
   done
 done
+
+# dataGuard
+for version in 19c; do
+    dg_output_file="dg_${version}.yaml"
+    sed "s/{{VERSION}}/${version}/g;" dataGuard.tpl > ../dataGuard/${dg_output_file}
+done
