@@ -61,6 +61,7 @@ spec:
         args:
         - --isRAC
         - --isASM
+        - --query.timeout=3
         env:
         - name: DATA_SOURCE_NAME
           valueFrom:

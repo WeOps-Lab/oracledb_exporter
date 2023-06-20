@@ -60,6 +60,7 @@ spec:
         imagePullPolicy: Always
         args:
         - --isDataGuard
+        - --query.timeout=3
         env:
         - name: DATA_SOURCE_NAME
           valueFrom:
