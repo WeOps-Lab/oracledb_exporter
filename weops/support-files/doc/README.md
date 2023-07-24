@@ -30,6 +30,7 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 | --isRAC              | 是否为rac集群架构(开关参数), 默认不开启                                                                                                                | 否        |                                                |
 | --isASM              | 是否有ASM磁盘组(开关参数), 默认不开启                                                                                                                 | 否        |                                                |
 | --isDataGuard        | 是否为DataGuard(开关参数), 默认不开启                                                                                                              | 否        |                                                |
+| --isArchiveLog       | 是否采集归档日志指标, 默认不开启                                                                                                                      | 否        |                                                |
 | --query.timeout      | 查询超时秒数，默认使用5s                                                                                                                          | 否        | 5                                              |
 | --log.level          | 日志级别                                                                                                                                   | 否        | info                                           |
 | --web.listen-address | exporter监听id及端口地址                                                                                                                      | 否        | 127.0.0.1:9601                                 |
@@ -194,7 +195,7 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 
 #### weops_oracledb_exporter 2.2.1
 
-- 增加dataguard监控指标
+- 增加dataguard、归档日志类监控指标
 - 增加rac、asm和dataguard指标采集开关
 - 去除自定义文件
 

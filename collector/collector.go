@@ -48,6 +48,7 @@ type Config struct {
 	IsDG               bool
 	IsASM              bool
 	IsRAC              bool
+	IsArchiveLog       bool
 }
 
 // CreateDefaultConfig returns the default configuration of the Exporter
@@ -159,7 +160,6 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 		}
 		close(doneCh)
 	}()
-
 	e.Collect(metricCh)
 	close(metricCh)
 	<-doneCh
@@ -323,6 +323,10 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 		}()
 	}
 	wg.Wait()
+
+	if e.config.IsArchiveLog {
+		e.scrapeArchivedInfo(e.db, ch)
+	}
 }
 
 func (e *Exporter) connect() error {

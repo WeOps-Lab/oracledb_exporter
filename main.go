@@ -29,6 +29,7 @@ var (
 	isDG           = kingpin.Flag("isDataGuard", "Whether this is a DataGuard").Default("false").Bool()
 	isASM          = kingpin.Flag("isASM", "Whether this is a ASM").Default("false").Bool()
 	isRAC          = kingpin.Flag("isRAC", "Whether this is a RAC").Default("false").Bool()
+	isArchiveLog   = kingpin.Flag("isArchiveLog", "Whether to collect archiveLog metrics").Default("false").Bool()
 	metricPath     = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics. (env: TELEMETRY_PATH)").Default(getEnv("TELEMETRY_PATH", "/metrics")).String()
 	customMetrics  = kingpin.Flag("custom.metrics", "File that may contain various custom metrics in a TOML file. (env: CUSTOM_METRICS)").Default(getEnv("CUSTOM_METRICS", "")).String()
 	queryTimeout   = kingpin.Flag("query.timeout", "Query timeout (in seconds). (env: QUERY_TIMEOUT)").Default(getEnv("QUERY_TIMEOUT", "5")).Int()
@@ -56,6 +57,7 @@ func main() {
 		IsDG:          *isDG,
 		IsASM:         *isASM,
 		IsRAC:         *isRAC,
+		IsArchiveLog:  *isArchiveLog,
 	}
 	exporter, err := collector.NewExporter(logger, config)
 	if err != nil {
