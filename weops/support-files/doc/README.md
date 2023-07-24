@@ -27,7 +27,9 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 | **参数名**              | **含义**                                                                                                                                 | **是否必填** | **使用举例**                                       |
 |----------------------|----------------------------------------------------------------------------------------------------------------------------------------|----------|------------------------------------------------|
 | DATA_SOURCE_NAME     | DSN参数，在连接Oracle数据库时，需要提供一个连接字符串，其中包括Oracle数据库实例的主机名、端口号和服务名称，例如： oracle://username:password@hostname:port/service_name **注意！该参数为环境变量** | 是        | oracle://weops:Weops123@127.0.0.1:1521/ORCLCDB |
-| --custom.metrics     | 自定义指标查询文件路径   **注意！该参数在平台层面为文件参数，进程中该参数值为采集配置文件路径(上传文件即可，平台会补充文件路径)！**                                                                 |          |                                                |
+| --isRAC              | 是否为rac集群架构(开关参数), 默认不开启                                                                                                                | 否        |                                                |
+| --isASM              | 是否有ASM磁盘组(开关参数), 默认不开启                                                                                                                 | 否        |                                                |
+| --isDataGuard        | 是否为DataGuard(开关参数), 默认不开启                                                                                                              | 否        |                                                |
 | --query.timeout      | 查询超时秒数，默认使用5s                                                                                                                          | 否        | 5                                              |
 | --log.level          | 日志级别                                                                                                                                   | 否        | info                                           |
 | --web.listen-address | exporter监听id及端口地址                                                                                                                      | 否        | 127.0.0.1:9601                                 |
@@ -127,114 +129,6 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
     GRANT SELECT ON V_$dataguard_stats TO weops;
     ```
 
-5. 自定义指标查询文件
-   - 文件内容规范
-     - 每一类自定义查询指标必须含有`[[metric]]`开头
-     - 对于每个指标部分，需要提供上下文（context）、请求（request）和请求字段与注释之间的映射。
-     - `context` 指标前缀
-     - `labels` 指标维度数据信息，[维度1], [维度2], [维度3]...
-     - `metricsdesc`  [指标后缀] = [指标的描述信息]
-     - `metricstype` [指标后缀] = [指标类型]
-     - `request` sql查询语句，注意sql中字段与 `labels` 和 `metricsdesc` 的映射  
-
-   - 使用自定义指标查询 (通过命令行参数 `--custom.metrics` 设置)，下方是默认的自定义指标文件配置内容
-    ```toml
-    [[metric]]
-    context = "rac"
-    metricsdesc = { node = "Number of nodes in the RAC cluster." }
-    request = "select count(*) as node from gv$instance where database_type='RAC'"
-
-    [[metric]]
-    context = "asm_disk_stat"
-    labels = [ "inst_id", "node_name", "instance_name", "diskgroup_name", "disk_number", "failgroup", "path" ]
-    metricsdesc = { reads = "Total number of I/O read requests for the DG.", writes = "Total number of I/O write requests for the DG.", read_time = "Total I/O time (in hundreths of a second) for read requests for the disk", write_time = "Total I/O time (in hundreths of a second) for write requests for the disk", bytes_read = "Total number of bytes read from the DG", bytes_written = "Total number of bytes written from the DG", iops = "Total number of I/O requests for the DG" }
-    metricstype = { reads = "counter", writes = "counter", bytes_read = "counter", read_time = "counter", write_time = "counter", bytes_written = "counter", iops = "counter" }
-    request = '''
-      SELECT i.instance_number                         AS inst_id,
-             i.host_name                               AS node_name,
-             i.instance_name,
-             g.name                                    AS diskgroup_name,
-             ds.disk_number                            AS disk_number,
-             ds.failgroup                              AS failgroup,
-             ds.reads                                  AS reads,
-             ds.writes                                 AS writes,
-             ds.read_time * 1000                       AS read_time,
-             ds.write_time * 1000                      AS write_time,
-             ds.bytes_read                             AS bytes_read,
-             ds.bytes_written                          AS bytes_written,
-             REGEXP_REPLACE (ds.PATH, '.*/\', '\')     AS PATH,
-             ds.reads + ds.writes                      AS iops
-        FROM v$asm_disk_stat ds, v$asm_diskgroup_stat g, v$instance i
-       WHERE ds.mount_status = 'CACHED' AND ds.group_number = g.group_number
-    '''
-    
-    [[metric]]
-    context = "asm_space_consumers"
-    labels = [ "inst_id", "diskgroup_name", "node_name", "instance_name", "sid", "file_type" ]
-    metricsdesc = { size_mb = "Total space usage by db by file_type" , files = "Number of files by db by type" }
-    request = '''
-      SELECT i.instance_number                     AS inst_id,
-             i.host_name                           AS node_name,
-             i.instance_name,
-             gname                                 AS diskgroup_name,
-             dbname                                AS sid,
-             file_type,
-             ROUND (SUM (space) / 1024 / 1024)     size_mb,
-             COUNT (*)                             AS files
-        FROM v$instance i,
-             (SELECT gname,
-                     REGEXP_SUBSTR (full_alias_path,
-                                    '[[:alnum:]_]*',
-                                    1,
-                                    4)    dbname,
-                     file_type,
-                     space,
-                     aname,
-                     system_created,
-                     alias_directory
-                FROM (    SELECT CONCAT ('+' || gname,
-                                         SYS_CONNECT_BY_PATH (aname, '/'))
-                                     full_alias_path,
-                                 system_created,
-                                 alias_directory,
-                                 file_type,
-                                 space,
-                                 LEVEL,
-                                 gname,
-                                 aname
-                            FROM (SELECT b.name                gname,
-                                         a.parent_index        pindex,
-                                         a.name                aname,
-                                         a.reference_index     rindex,
-                                         a.system_created,
-                                         a.alias_directory,
-                                         c.TYPE                file_type,
-                                         c.space
-                                    FROM v$asm_alias a, v$asm_diskgroup b, v$asm_file c
-                                   WHERE     a.group_number = b.group_number
-                                         AND a.group_number = c.group_number(+)
-                                         AND a.file_number = c.file_number(+)
-                                         AND a.file_incarnation = c.incarnation(+))
-                      START WITH     (MOD (pindex, POWER (2, 24))) = 0
-                                 AND rindex IN
-                                         (SELECT a.reference_index
-                                            FROM v$asm_alias a, v$asm_diskgroup b
-                                           WHERE     a.group_number =
-                                                     b.group_number
-                                                 AND (MOD (a.parent_index,
-                                                           POWER (2, 24))) =
-                                                     0)
-                      CONNECT BY PRIOR rindex = pindex)
-               WHERE NOT file_type IS NULL AND system_created = 'Y')
-    GROUP BY i.instance_number,
-             i.host_name,
-             i.instance_name,
-             gname,
-             dbname,
-             file_type
-    '''
-    ```
-
 
 ### 指标简介
 | **指标ID**                                       | **指标中文名**                | **维度ID**                                                                        | **维度含义**                                   | **单位**    |
@@ -302,6 +196,7 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 
 - 增加dataguard监控指标
 - 增加rac、asm和dataguard指标采集开关
+- 去除自定义文件
 
 添加“小嘉”微信即可获取oracle数据库监控指标最佳实践礼包，其他更多问题欢迎咨询
 
