@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -26,6 +27,11 @@ import (
 var (
 	// Version will be set at build time.
 	Version        = "0.0.0.dev"
+	user           = os.Getenv("USER")
+	password       = os.Getenv("PASSWORD")
+	host           = kingpin.Flag("host", "Oracle database service ip or domain").Default("127.0.0.1").String()
+	port           = kingpin.Flag("port", "Oracle database service port").Default("1521").String()
+	serviceName    = os.Getenv("SERVICE_NAME")
 	isDG           = kingpin.Flag("isDataGuard", "Whether this is a DataGuard").Default("false").Bool()
 	isASM          = kingpin.Flag("isASM", "Whether this is a ASM").Default("false").Bool()
 	isRAC          = kingpin.Flag("isRAC", "Whether this is a RAC").Default("false").Bool()
@@ -47,6 +53,11 @@ func main() {
 	kingpin.Parse()
 	logger := promlog.New(promLogConfig)
 	dsn := os.Getenv("DATA_SOURCE_NAME")
+
+	if dsn == "" {
+		// 拼接DSN字符串
+		dsn = fmt.Sprintf("oracle://%v:%v@%v:%s/%s", user, password, *host, *port, serviceName)
+	}
 
 	config := &collector.Config{
 		DSN:           dsn,
