@@ -58,12 +58,35 @@ spec:
       - name: oracledb-exporter-standalone-{{VERSION}}
         image: registry-svc:25000/library/oracledb-exporter:latest
         imagePullPolicy: Always
+        args:
+        - --host=db{{VERSION}}-oracle-db.oracle
+        - --port=1521
+
         env:
-        - name: DATA_SOURCE_NAME
+        #- name: DATA_SOURCE_NAME
+        #  valueFrom:
+        #    configMapKeyRef:
+        #      name: oracle-dsn
+        #      key: DATA_SOURCE_NAME_{{VERSION}}
+
+        - name: SERVICE_NAME
           valueFrom:
             configMapKeyRef:
               name: oracle-dsn
-              key: DATA_SOURCE_NAME_{{VERSION}}
+              key: SERVICE_NAME_{{VERSION}}
+
+        - name: USER
+          valueFrom:
+            configMapKeyRef:
+              name: oracle-dsn
+              key: USER_{{VERSION}}
+
+        - name: PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: oracle-dsn
+              key: PASSWORD_{{VERSION}}
+
         securityContext:
           allowPrivilegeEscalation: false
           runAsUser: 0
