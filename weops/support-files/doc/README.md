@@ -185,11 +185,11 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 | oracledb_asm_disk_stat_iops                    | Oracle数据库ASM磁盘每秒IO            | inst_id, node_name, instance_name, diskgroup_name, disk_number, failgroup, path | 实例ID, 节点名称, 实例名称, 磁盘组名称, 磁盘编号, 故障组名称, 磁盘路径 | -         |
 | oracledb_asm_space_consumers_files             | Oracle数据库ASM磁盘组上文件数量      | diskgroup_name, file_type, inst_id, instance_name, node_name                    | 磁盘组名称, 文件类型, 实例ID, 实例名称, 节点名称                       | -         |
 | oracledb_asm_space_consumers_size_mb           | Oracle数据库ASM磁盘组上文件大小      | diskgroup_name, file_type, inst_id, instance_name, node_name                    | 磁盘组名称, 文件类型, 实例ID, 实例名称, 节点名称                       | mebibytes |
-| process_cpu_seconds_total                      | Oracle数据库进程CPU秒数总计          | -                                                                               | -                                                                      | s         |
-| process_max_fds                                | Oracle数据库进程最大文件描述符数     | -                                                                               | -                                                                      | -         |
-| process_open_fds                               | Oracle数据库进程打开文件描述符数     | -                                                                               | -                                                                      | -         |
-| process_resident_memory_bytes                  | Oracle数据库进程常驻内存大小         | -                                                                               | -                                                                      | bytes     |
-| process_virtual_memory_bytes                   | Oracle数据库进程虚拟内存大小         | -                                                                               | -                                                                      | bytes     |
+| process_cpu_seconds_total                      | Oracle数据库监控探针进程CPU秒数总计          | -                                                                               | -                                                                      | s         |
+| process_max_fds                                | Oracle数据库监控探针进程最大文件描述符数     | -                                                                               | -                                                                      | -         |
+| process_open_fds                               | Oracle数据库监控探针进程打开文件描述符数     | -                                                                               | -                                                                      | -         |
+| process_resident_memory_bytes                  | Oracle数据库监控探针进程常驻内存大小         | -                                                                               | -                                                                      | bytes     |
+| process_virtual_memory_bytes                   | Oracle数据库监控探针进程虚拟内存大小         | -                                                                               | -                                                                      | bytes     |
 | oracledb_exporter_last_scrape_duration_seconds | Oracle数据库监控探针最近一次抓取时长 | -                                                                               | -                                                                      | s         |
 | oracledb_exporter_last_scrape_error            | Oracle数据库监控探针最近一次抓取状态 | -                                                                               | -                                                                      | -         |
 | oracledb_exporter_scrapes_total                | Oracle数据库监控探针抓取指标总数     | -                                                                               | -                                                                      | -         |
@@ -210,6 +210,7 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 
 - DSN拆分
 - 隐藏敏感参数
+- process类监控指标中文名更正
 
 添加“小嘉”微信即可获取oracle数据库监控指标最佳实践礼包，其他更多问题欢迎咨询
 
