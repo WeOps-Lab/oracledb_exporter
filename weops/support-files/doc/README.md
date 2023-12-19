@@ -140,7 +140,7 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 
 | **指标ID**                               | **指标中文名**                | **维度ID**                                                                        | **维度含义**                                   | **单位**    |
 |----------------------------------------|--------------------------|---------------------------------------------------------------------------------|--------------------------------------------|-----------|
-| oracledb_up                            | Oracle数据库运行状态            | -                                                                               | -                                          | -         |
+| oracledb_up                            | Oracle数据库监控插件运行状态        | -                                                                               | -                                          | -         |
 | oracledb_uptime_seconds                | Oracle数据库实例已运行时间         | inst_id, instance_name, node_name                                               | 实例ID, 实例名称, 节点名称                           | s         |
 | oracledb_activity_execute_count        | Oracle数据库执行次数            | -                                                                               | -                                          | -         |
 | oracledb_activity_parse_count_total    | Oracle数据库解析次数            | -                                                                               | -                                          | -         |
@@ -205,6 +205,10 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 - DSN拆分
 - 隐藏敏感参数
 - process类监控指标中文名更正
+
+#### weops_oracledb_exporter 2.2.3
+
+- up指标中文名优化
 
 添加“小嘉”微信即可获取oracle数据库监控指标最佳实践礼包，其他更多问题欢迎咨询
 
