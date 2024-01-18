@@ -26,20 +26,20 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
 ### 参数说明
 
 
-| **参数名**           | **含义**                                | **是否必填** | **使用举例**   |
-| -------------------- | --------------------------------------- | ------------ | -------------- |
-| --host               | 数据库主机IP                            | 是           | 127.0.0.1      |
-| --port               | 数据库服务端口                          | 是           | 1521           |
-| USER                 | 数据库用户名(环境变量)                  | 是           |                |
-| PASSWORD             | 数据库密码(环境变量)                    | 是           |                |
-| SERVICE_NAME         | 数据库服务名(环境变量)                  | 是           | ORCLCDB        |
-| --isRAC              | 是否为rac集群架构(开关参数), 默认不开启 | 否           |                |
-| --isASM              | 是否有ASM磁盘组(开关参数), 默认不开启   | 否           |                |
-| --isDataGuard        | 是否为DataGuard(开关参数), 默认不开启   | 否           |                |
-| --isArchiveLog       | 是否采集归档日志指标, 默认不开启        | 否           |                |
-| --query.timeout      | 查询超时秒数，默认使用5s                | 否           | 5              |
-| --log.level          | 日志级别                                | 否           | info           |
-| --web.listen-address | exporter监听id及端口地址                | 否           | 127.0.0.1:9601 |
+| **参数名**              | **含义**                    | **是否必填** | **使用举例**       |
+|----------------------|---------------------------|----------|----------------|
+| --host               | 数据库主机IP                   | 是        | 127.0.0.1      |
+| --port               | 数据库服务端口                   | 是        | 1521           |
+| USER                 | 数据库用户名(环境变量)              | 是        |                |
+| PASSWORD             | 数据库密码(环境变量)               | 是        |                |
+| SERVICE_NAME         | 数据库服务名(环境变量)              | 是        | ORCLCDB        |
+| --isRAC              | 是否为rac集群架构(开关参数), 默认不开启   | 否        |                |
+| --isASM              | 是否有ASM磁盘组(开关参数), 默认不开启    | 否        |                |
+| --isDataGuard        | 是否为DataGuard(开关参数), 默认不开启 | 否        |                |
+| --isArchiveLog       | 是否采集归档日志指标, 默认不开启         | 否        |                |
+| --query.timeout      | 查询超时秒数，默认使用5s             | 否        | 5              |
+| --log.level          | 日志级别                      | 否        | info           |
+| --web.listen-address | exporter监听id及端口地址         | 否        | 127.0.0.1:9601 |
 
 ### 使用指引
 
@@ -72,8 +72,18 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
    ```shell
    sqlplus username/password@host:port/service_name
    ```
-4. 创建账户及授权
+4. 创建账户及授权  
    注意！创建账户时必须使用管理员账户
+   
+   > 创建账户类型有区别:  
+   a) 在Oracle数据库中，使用C##前缀是为了创建一个包含大写字母和特殊字符的用户名，这样可以确保在创建和使用这些用户时不会发生命名冲突。C##前缀表示"Container Database"，用于标识这个用户是一个全局共享的用户，而不是只属于某个具体的Pluggable Database (PDB)。  
+   b) 要决定是否在用户名前使用C##，主要取决于数据库的架构。在Oracle 12c及更高版本中，数据库被分为一个容器数据库（CDB）和一个或多个可插拔数据库（PDB）。如果你在CDB层面创建用户，可以选择使用C##前缀，表示这个用户是一个全局共享的用户。如果在PDB层面创建用户，通常不需要使用C##前缀，因为PDB内的用户空间是相互隔离的。  
+   c) 在创建用户时是否使用C##前缀取决于你的特定需求和数据库架构。如果你的用户需要在不同的PDB之间共享，并且你希望避免命名冲突，那么可以考虑使用C##前缀。如果用户只在特定的PDB中使用，可能不需要这个前缀。  
+   d) 使用 C## 前缀的情况：  
+   `CREATE USER C##GlobalUser IDENTIFIED BY password CONTAINER = ALL;`  
+   e) 不使用 C## 前缀的情况：   
+   `CREATE USER LocalUser IDENTIFIED BY password;`
+
 
    ```sql
    # 新建用户
@@ -126,14 +136,20 @@ Oracle Database: `11g`, `12c`, `18c`, `19c`, `21c`
    GRANT SELECT ON V_$asm_file to [user];
 
    # sga类指标授权
-   GRANT SELECT ON V_$sga TO weops;
-   GRANT SELECT ON V_$sgastat TO weops;
+   GRANT SELECT ON V_$sga TO [user];
+   GRANT SELECT ON V_$sgastat TO [user];
 
    # pga类指标授权
-   GRANT SELECT ON V_$pgastat TO weops;
+   GRANT SELECT ON V_$pgastat TO [user];
 
    # dataguard类指标授权
-   GRANT SELECT ON V_$dataguard_stats TO weops;
+   GRANT SELECT ON V_$dataguard_stats TO [user];
+   
+   # archived_log类指标授权
+   GRANT SELECT ON V_$database to [user];
+   GRANT SELECT ON V_$archive_dest to [user];
+   GRANT SELECT ON V_$parameter to [user];
+   GRANT SELECT ON V_$asm_diskgroup to [user];
    ```
 
 ### 指标简介
