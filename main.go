@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"net/http"
 	"os"
 
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
@@ -14,9 +14,11 @@ import (
 	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
 	_ "github.com/sijms/go-ora/v2"
 
-	"github.com/alecthomas/kingpin/v2"
+	kingpin "github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/promlog/flag"
+
+	"github.com/go-kit/log/level"
 
 	// Required for debugging
 	// _ "net/http/pprof"
@@ -82,7 +84,7 @@ func main() {
 	}
 
 	prometheus.MustRegister(exporter)
-	prometheus.MustRegister(version.NewCollector("oracledb_exporter"))
+	prometheus.MustRegister(collectors.NewBuildInfoCollector())
 
 	level.Info(logger).Log("msg", "Starting oracledb_exporter", "version", version.Info())
 	level.Info(logger).Log("msg", "Build context", "build", version.BuildContext())
