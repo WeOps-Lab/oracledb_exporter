@@ -249,7 +249,7 @@ func (e *Exporter) DefaultMetrics() Metrics {
 
 	// rac类指标
 	var racMetricsToScrape Metrics
-	if e.config.IsASM {
+	if e.config.IsRAC {
 		if _, err := toml.Decode(racMetricsConst, &racMetricsToScrape); err != nil {
 			level.Error(e.logger).Log(err)
 			panic(errors.New("Error while loading " + racMetricsConst))
